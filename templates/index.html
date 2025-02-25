@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing Calculator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Pricing Calculator</h1>
+        <form method="POST">
+            <!-- Car Type -->
+            <div class="form-group">
+                <label for="car_type">Car Type:</label>
+                <select id="car_type" name="car_type" required>
+                    <option value="Car Plus">Car Plus</option>
+                    <option value="Car Prime">Car Prime</option>
+                    <option value="Car Max">Car Max</option>
+                </select>
+            </div>
+
+            <!-- Trip Type -->
+            <div class="form-group">
+                <label>Trip Type:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="trip_type" value="One-way Trip" required onclick="toggleFields(true)"> One-way Trip</label>
+                    <label><input type="radio" name="trip_type" value="Round Trip" required onclick="toggleFields(false)"> Round Trip</label>
+                </div>
+            </div>
+
+            <!-- Distance -->
+            <div class="form-group">
+                <label for="distance">Distance (km):</label>
+                <input type="number" id="distance" name="distance" step="0.1" required>
+            </div>
+
+            <!-- Dropoff Fuel Type -->
+            <div class="form-group">
+                <label>Dropoff Fuel Type:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="dropoff_fuel_type" value="Gas" required> Gas</label>
+                    <label><input type="radio" name="dropoff_fuel_type" value="Oil" required> Oil</label>
+                </div>
+            </div>
+
+            <!-- Return Fuel Type -->
+            <div class="form-group">
+                <label>Return Fuel Type:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="return_fuel_type" value="Gas" required> Gas</label>
+                    <label><input type="radio" name="return_fuel_type" value="Oil" required> Oil</label>
+                </div>
+            </div>
+
+            <!-- Toll Fee -->
+            <div class="form-group">
+                <label for="toll_fee">Toll Fee:</label>
+                <input type="number" id="toll_fee" name="toll_fee" step="0.1" required>
+            </div>
+
+            <!-- Number of Days (Hidden by Default) -->
+            <div class="form-group" id="daysField" style="display: none;">
+                <label for="n_days">Number of Days:</label>
+                <input type="number" id="n_days" name="n_days" value="1" min="1">
+            </div>
+
+            <!-- Dropoff Surge (Hidden by Default) -->
+            <div class="form-group" id="dropoffSurgeField" style="display: none;">
+                <label>Dropoff Surge:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="dropoff_surge" value="Yes" required> Yes</label>
+                    <label><input type="radio" name="dropoff_surge" value="No" required> No</label>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-group">
+                <button type="submit">Calculate Price</button>
+            </div>
+        </form>
+
+        <!-- Display Price -->
+        {% if price %}
+        <div class="result">
+            <h2>Estimated Price: {{ price }} TK</h2>
+        </div>
+        {% endif %}
+
+        <!-- Display Errors -->
+        {% if error %}
+        <div class="error">
+            <p>{{ error }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- JavaScript to Toggle Fields -->
+    <script>
+        function toggleFields(isOneWay) {
+            const daysField = document.getElementById('daysField');
+            const dropoffSurgeField = document.getElementById('dropoffSurgeField');
+
+            if (isOneWay) {
+                // Show Dropoff Surge, hide Number of Days
+                dropoffSurgeField.style.display = 'block';
+                daysField.style.display = 'none';
+            } else {
+                // Show Number of Days, hide Dropoff Surge
+                daysField.style.display = 'block';
+                dropoffSurgeField.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
