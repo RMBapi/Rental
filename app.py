@@ -4,9 +4,9 @@ app = Flask(__name__)
 
 # Pricing parameters for each car type
 pricing_params = {
-    "Car Plus": {"body_fare_base": 1500, "fare_per_kilo": 12, "mileage_for_Gas": 14, "mileage_for_Oil": 9, "Oil_Price": 130, "Gas_Price": 43, "driver_stay_fee": 500, "reducer_discount_districts_body": 0.25},
-    "Car Prime": {"body_fare_base": 2000, "fare_per_kilo": 12, "mileage_for_Gas": 12, "mileage_for_Oil": 9, "Oil_Price": 130, "Gas_Price": 43, "driver_stay_fee": 600, "reducer_discount_districts_body": 0.25},
-    "Car Max": {"body_fare_base": 2500, "fare_per_kilo": 15, "mileage_for_Gas": 10, "mileage_for_Oil": 7.5, "Oil_Price": 130, "Gas_Price": 43, "driver_stay_fee": 700, "reducer_discount_districts_body": 0.25}
+    "Car Plus": {"body_fare_base": 1500, "fare_per_kilo": 12, "mileage_for_Gas": 9, "mileage_for_Oil": 9, "Oil_Price": 130, "Gas_Price": 43, "driver_stay_fee": 500, "reducer_discount_districts":  0.80},
+    "Car Prime": {"body_fare_base": 2000, "fare_per_kilo": 12, "mileage_for_Gas": 9, "mileage_for_Oil": 9, "Oil_Price": 130, "Gas_Price": 43, "driver_stay_fee": 600, "reducer_discount_districts": 0.80},
+    "Car Max": {"body_fare_base": 2500, "fare_per_kilo": 15, "mileage_for_Gas": 7.5, "mileage_for_Oil": 7.5, "Oil_Price": 130, "Gas_Price": 43, "driver_stay_fee": 700, "reducer_discount_districts": 0.80}
 }
 
 # Helper function to calculate fuel cost
@@ -35,12 +35,10 @@ def calculate_price_OneWay(params):
     dropoff_fuel_type = params['dropoff_gas_oil_mapping']
     return_fuel_type = params['return_gas_oil_mapping']
     dropoff_surge = params['dropoff_surge']
-    reducer_discount_districts_body = params['reducer_discount_districts_body']
+    reducer_discount_districts = params['reducer_discount_districts']
 
-    # Apply discount if surge is 'Yes'
-    if dropoff_surge == 'Yes':
-        body_fare_base *= reducer_discount_districts_body
 
+    
     # Calculate fuel cost for dropoff and return
     cost = calculate_fuel_cost(estimated_destination_distance, dropoff_fuel_type, mileage_gas, mileage_oil, Gas_Price, Oil_Price)
     return_cost = calculate_fuel_cost(Lower_PSRM_Peripheria, return_fuel_type, mileage_gas, mileage_oil, Gas_Price, Oil_Price)
@@ -48,6 +46,9 @@ def calculate_price_OneWay(params):
     # Calculate total price
     total_toll_fee = toll_fee * 2
     total_price = body_fare_base + cost + return_cost + total_toll_fee + 250  # 250 is safety coverage + booking fee
+
+    if dropoff_surge == 'Yes':
+        total_price *= reducer_discount_districts
 
     return total_price
 
@@ -72,17 +73,13 @@ def calculate_price_roundTrip(params):
 
     # Calculate body fare based on number of days
     if n_days == 1:
-        body_fare = body_fare_base
-    elif n_days == 2:  # 2 days, 1 night
-        body_fare = body_fare_base * n_days
-    elif n_days == 3:  # 3 days, 2 nights
-        body_fare = (body_fare_base * n_days) * 0.85
-    elif n_days == 4:  # 4 days, 3 nights
-        body_fare = (body_fare_base * n_days) * 0.80
-    elif n_days == 5:  # 5 days, 4 nights
-        body_fare = (body_fare_base * n_days) * 0.78
-    else:  # More than 5 days
-        body_fare = (body_fare_base * n_days) * 0.7
+        body_fare = body_fare_base 
+    elif 1 < n_days <= 3:
+        body_fare = body_fare_base * n_days * 0.9
+    elif 3 < n_days <= 6:
+        body_fare = body_fare_base * n_days * 0.85
+    else:
+        body_fare = body_fare_base * n_days * 0.8
 
     # Calculate driver stay fee
     stay_fee = driver_stay_fee if n_days == 1 else driver_stay_fee * (n_days - 1)
@@ -140,7 +137,7 @@ def index():
             'dropoff_gas_oil_mapping': dropoff_fuel_type,
             'return_gas_oil_mapping': return_fuel_type,
             'dropoff_surge': dropoff_surge,
-            'reducer_discount_districts_body': pricing_params[car_type]['reducer_discount_districts_body']
+            'reducer_discount_districts': pricing_params[car_type]['reducer_discount_districts']
         }
 
         # Calculate price

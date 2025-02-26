@@ -7,8 +7,41 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <div id="instructionModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Instructions</h2>
+            <ol>
+                <li>Input the distance(KM) from Google Maps by entering the pickup and drop-off locations.</li>
+                <li>After getting the distance, check the drop-off location whether Gas or Oil is available. Based on the availability, choose one from <strong>Dropoff Fuel Type</strong>.</li>
+                <li>After that, check the pickup location whether Gas or Oil is available. Based on the availability, choose one from <strong>Return Fuel Type</strong>.</li>
+                <li>Check if there is any toll from the pickup to drop-off. If there is any toll, add the total amount of toll.</li>
+                <li>
+                    <strong>For One-way Trip:</strong>
+                    <ul>
+                        <li>In <strong>Dropoff Surge</strong>, select "NO".</li>
+                        <li>Check the market price. If it's near the market price, store it. If it's too high, select <strong>Dropoff Surge</strong> as "Yes" and store the price.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>For Round Trip:</strong>
+                    <ul>
+                        <li>Provide <strong>Number of Days</strong>:
+                            <ul>
+                                <li>Default 1 day: Means the user takes a round trip on the same day.</li>
+                                <li>2 days: 2 days, 1 night.</li>
+                                <li>3 days: 3 days, 2 nights.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </div>
+    
     <div class="container">
         <h1>Pricing Calculator</h1>
+        <button id="instructionButton" class="instruction_btn">Instructions</button>
         <form method="POST">
             <!-- Car Type -->
             <div class="form-group">
@@ -116,6 +149,27 @@
 
         }
     }
+
+    const modal = document.getElementById('instructionModal');
+        const btn = document.getElementById('instructionButton');
+        const span = document.getElementsByClassName('close')[0];
+
+        // Open the modal when the button is clicked
+        btn.onclick = function() {
+            modal.style.display = 'block';
+        }
+
+        // Close the modal when the close button is clicked
+        span.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        // Close the modal when clicking outside of it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>
