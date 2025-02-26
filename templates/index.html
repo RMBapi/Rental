@@ -24,8 +24,8 @@
             <div class="form-group">
                 <label>Trip Type:</label>
                 <div class="radio-group">
-                    <label><input type="radio" name="trip_type" value="One-way Trip" required onclick="toggleFields(true)"> One-way Trip</label>
-                    <label><input type="radio" name="trip_type" value="Round Trip" required onclick="toggleFields(false)"> Round Trip</label>
+                    <label><input type="radio" name="trip_type" value="One-way Trip" required onclick="toggleFields(false)"> One-way Trip</label>
+                    <label><input type="radio" name="trip_type" value="Round Trip" required onclick="toggleFields(true)"> Round Trip</label>
                 </div>
             </div>
 
@@ -69,8 +69,8 @@
             <div class="form-group" id="dropoffSurgeField" style="display: none;">
                 <label>Dropoff Surge:</label>
                 <div class="radio-group">
-                    <label><input type="radio" name="dropoff_surge" value="Yes" required> Yes</label>
-                    <label><input type="radio" name="dropoff_surge" value="No" required> No</label>
+                    <label><input type="radio" name="dropoff_surge" value="Yes" class="input" > Yes</label>
+                    <label><input type="radio" name="dropoff_surge" value="No" class="input" > No</label>
                 </div>
             </div>
 
@@ -97,20 +97,25 @@
 
     <!-- JavaScript to Toggle Fields -->
     <script>
-        function toggleFields(isOneWay) {
+        function toggleFields(isRoundTrip) {
             const daysField = document.getElementById('daysField');
             const dropoffSurgeField = document.getElementById('dropoffSurgeField');
+            const dropoffSurgeInputs = dropoffSurgeField.querySelectorAll('.input');
 
-            if (isOneWay) {
-                // Show Dropoff Surge, hide Number of Days
-                dropoffSurgeField.style.display = 'block';
-                daysField.style.display = 'none';
-            } else {
-                // Show Number of Days, hide Dropoff Surge
-                daysField.style.display = 'block';
-                dropoffSurgeField.style.display = 'none';
-            }
+        if (isRoundTrip) {
+        // Show Number of Days, hide Dropoff Surge
+           daysField.style.display = 'block';
+           dropoffSurgeField.style.display = 'none';
+           dropoffSurgeInputs.forEach(input => input.required = false);
+
+    } else {
+        // Show Dropoff Surge, hide Number of Days
+           dropoffSurgeField.style.display = 'block';
+           daysField.style.display = 'none';
+           dropoffSurgeInputs.forEach(input => input.required = true);
+
         }
+    }
     </script>
 </body>
 </html>

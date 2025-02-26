@@ -107,6 +107,16 @@ def index():
         n_days = max(int(request.form.get('n_days', 1)), 1)  # Text field: User input as int number (minimum 1)
         dropoff_surge = request.form.get('dropoff_surge', 'No')  # Radio button: Yes, No
 
+
+        print("Car Type:", car_type)
+        print("Trip Type:", trip_type)
+        print("Distance:", distance)
+        print("Dropoff Fuel Type:", dropoff_fuel_type)
+        print("Return Fuel Type:", return_fuel_type)
+        print("Toll Fee:", toll_fee)
+        print("Number of Days:", n_days)
+        print("Dropoff Surge:", dropoff_surge)
+
         # Validate inputs
         if distance < 0:
             return render_template('index.html', error="Distance cannot be negative.")
