@@ -7,52 +7,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div id="instructionModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Instructions</h2>
-            <ol>
-                <li>Input the distance(KM) from Google Maps by entering the pickup and drop-off locations.</li>
-                <li>After getting the distance, check the drop-off location whether Gas or Oil is available. Based on the availability, choose one from <strong>Dropoff Fuel Type</strong>.</li>
-                <li>After that, check the pickup location whether Gas or Oil is available. Based on the availability, choose one from <strong>Return Fuel Type</strong>.</li>
-                <li>Check if there is any toll from the pickup to drop-off. If there is any toll, add the total amount of toll.</li>
-                <li>
-                    <strong>For One-way Trip:</strong>
-                    <ul>
-                        <li>In <strong>Dropoff Surge</strong>, select "NO".</li>
-                        <li>Check the market price. If it's near the market price, store it. If it's too high, select <strong>Dropoff Surge</strong> as "Yes" and store the price.</li>
-                    </ul>
-                </li>
-                <li>
-                    <strong>For Round Trip:</strong>
-                    <ul>
-                        <li>Provide <strong>Number of Days</strong>:
-                            <ul>
-                                <li>Default 1 day: Means the user takes a round trip on the same day.</li>
-                                <li>2 days: 2 days, 1 night.</li>
-                                <li>3 days: 3 days, 2 nights.</li>
-                            </ul>
-                        </li>
-                    </ul>
-                </li>
-            </ol>
-        </div>
-    </div>
-    
     <div class="container">
-        <h1>Pricing Calculator</h1>
-        <button id="instructionButton" class="instruction_btn">Instructions</button>
-        <form method="POST">
-            <!-- Car Type -->
-            <div class="form-group">
-                <label for="car_type">Car Type:</label>
-                <select id="car_type" name="car_type" required>
-                    <option value="Car Plus">Car Plus</option>
-                    <option value="Car Prime">Car Prime</option>
-                    <option value="Car Max">Car Max</option>
-                </select>
-            </div>
+        <!-- Instruction Button -->
+        <button id="instructionButton" class="instruction-button">Instruction</button>
 
+        <h1>Pricing Calculator</h1>
+        <form method="POST">
             <!-- Trip Type -->
             <div class="form-group">
                 <label>Trip Type:</label>
@@ -102,8 +62,8 @@
             <div class="form-group" id="dropoffSurgeField" style="display: none;">
                 <label>Dropoff Surge:</label>
                 <div class="radio-group">
-                    <label><input type="radio" name="dropoff_surge" value="Yes" class="input" > Yes</label>
-                    <label><input type="radio" name="dropoff_surge" value="No" class="input" > No</label>
+                    <label><input type="radio" name="dropoff_surge" value="Yes"> Yes</label>
+                    <label><input type="radio" name="dropoff_surge" value="No" > No</label>
                 </div>
             </div>
 
@@ -113,10 +73,32 @@
             </div>
         </form>
 
-        <!-- Display Price -->
-        {% if price %}
+        <!-- Display Prices for All Car Types -->
+        {% if prices %}
         <div class="result">
-            <h2>Estimated Price: {{ price }} TK</h2>
+            <h2>Estimated Prices:</h2>
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th>Car Type</th>
+                        <th>Price (TK)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Car Plus</td>
+                        <td>{{ prices['Car Plus'] }}</td>
+                    </tr>
+                    <tr>
+                        <td>Car Prime</td>
+                        <td>{{ prices['Car Prime'] }}</td>
+                    </tr>
+                    <tr>
+                        <td>Car Max</td>
+                        <td>{{ prices['Car Max'] }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         {% endif %}
 
@@ -126,6 +108,39 @@
             <p>{{ error }}</p>
         </div>
         {% endif %}
+    </div>
+
+    <!-- Instruction Modal -->
+    <div id="instructionModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Instructions</h2>
+            <ol>
+                <li>Please take the KM from Google Maps by entering the pickup and drop-off locations.</li>
+                <li>After getting the location, check in the drop-off location whether Gas or Oil is available. Based on the availability, choose one from <strong>Dropoff Fuel Type</strong>.</li>
+                <li>After that, check in the pickup location whether Gas or Oil is available. Based on the availability, choose one from <strong>Return Fuel Type</strong>.</li>
+                <li>Check if there is any toll from the pickup to drop-off. If there is any toll, add the total amount of toll.</li>
+                <li>
+                    <strong>For One-way Trip:</strong>
+                    <ul>
+                        <li>In <strong>Dropoff Surge</strong>, select "NO".</li>
+                        <li>Check the market price. If it's near the market price, store it. If it's too high, select <strong>Dropoff Surge</strong> as "Yes" and store the price.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>For Round Trip:</strong>
+                    <ul>
+                        <li>Provide <strong>Number of Days</strong>:
+                            <ul>
+                                <li>Default 1 day: Means the user takes a round trip on the same day.</li>
+                                <li>2 days: 2 days, 1 night.</li>
+                                <li>3 days: 3 days, 2 nights.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
     </div>
 
     <!-- JavaScript to Toggle Fields -->
@@ -150,7 +165,8 @@
         }
     }
 
-    const modal = document.getElementById('instructionModal');
+        // JavaScript for Modal
+        const modal = document.getElementById('instructionModal');
         const btn = document.getElementById('instructionButton');
         const span = document.getElementsByClassName('close')[0];
 

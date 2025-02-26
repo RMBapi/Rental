@@ -23,19 +23,20 @@ def calculate_fuel_cost(distance, fuel_type, mileage_gas, mileage_oil, Gas_Price
         return cost_Calculation(distance, mileage_oil, Oil_Price)
 
 # Calculate price for one-way trip
-def calculate_price_OneWay(params):
-    body_fare_base = params['body_fare_base']
+def calculate_price_OneWay(params,car_type):
+    car_params = pricing_params[car_type]
+    body_fare_base = car_params['body_fare_base']
     estimated_destination_distance = params['estimated_destination_distance']
-    mileage_oil = params['mileage_for_Oil']
-    mileage_gas = params['mileage_for_Gas']
-    Oil_Price = params['Oil_Price']
-    Gas_Price = params['Gas_Price']
+    mileage_oil = car_params['mileage_for_Oil']
+    mileage_gas = car_params['mileage_for_Gas']
+    Oil_Price = car_params['Oil_Price']
+    Gas_Price = car_params['Gas_Price']
     Lower_PSRM_Peripheria = params['Lower_PSRM_Peripheria']
     toll_fee = params['toll_fee']
     dropoff_fuel_type = params['dropoff_gas_oil_mapping']
     return_fuel_type = params['return_gas_oil_mapping']
     dropoff_surge = params['dropoff_surge']
-    reducer_discount_districts = params['reducer_discount_districts']
+    reducer_discount_districts = car_params['reducer_discount_districts']
 
 
     
@@ -50,20 +51,21 @@ def calculate_price_OneWay(params):
     if dropoff_surge == 'Yes':
         total_price *= reducer_discount_districts
 
-    return total_price
+    return round(total_price)
 
 # Calculate price for round trip
-def calculate_price_roundTrip(params):
-    body_fare_base = params['body_fare_base']
+def calculate_price_roundTrip(params,car_type):
+    car_params = pricing_params[car_type]
+    body_fare_base = car_params['body_fare_base']
     n_days = params['n_days']
     estimated_destination_distance = params['estimated_destination_distance']
-    mileage_oil = params['mileage_for_Oil']
-    mileage_gas = params['mileage_for_Gas']
-    Oil_Price = params['Oil_Price']
-    Gas_Price = params['Gas_Price']
+    mileage_oil = car_params['mileage_for_Oil']
+    mileage_gas = car_params['mileage_for_Gas']
+    Oil_Price = car_params['Oil_Price']
+    Gas_Price = car_params['Gas_Price']
     estimated_return_distance = params['estimated_return_distance']
     toll_fee = params['toll_fee']
-    driver_stay_fee = params['driver_stay_fee']
+    driver_stay_fee = car_params['driver_stay_fee']
     dropoff_fuel_type = params['dropoff_gas_oil_mapping']
     return_fuel_type = params['return_gas_oil_mapping']
 
@@ -88,14 +90,14 @@ def calculate_price_roundTrip(params):
     total_toll_fee = toll_fee * 2
     total_price = body_fare + cost + return_cost + total_toll_fee + stay_fee + 250  # 250 is safety coverage + booking fee
 
-    return total_price
+    return round(total_price)
 
 # Flask route to handle form submission
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         # Get form data
-        car_type = request.form.get('car_type')  # Selection option: Car Plus, Car Prime, Car Max
+        # car_type = request.form.get('car_type')  # Selection option: Car Plus, Car Prime, Car Max
         trip_type = request.form.get('trip_type')  # Radio button: One-way Trip, Round Trip
         distance = float(request.form.get('distance'))  # Text field: User input as number
         dropoff_fuel_type = request.form.get('dropoff_fuel_type')  # Radio button: Gas, Oil
@@ -105,7 +107,7 @@ def index():
         dropoff_surge = request.form.get('dropoff_surge', 'No')  # Radio button: Yes, No
 
 
-        print("Car Type:", car_type)
+        # print("Car Type:", car_type)
         print("Trip Type:", trip_type)
         print("Distance:", distance)
         print("Dropoff Fuel Type:", dropoff_fuel_type)
@@ -122,13 +124,6 @@ def index():
 
         # Prepare params dictionary
         params = {
-            'body_fare_base': pricing_params[car_type]['body_fare_base'],
-            'fare_per_kilo': pricing_params[car_type]['fare_per_kilo'],
-            'mileage_for_Gas': pricing_params[car_type]['mileage_for_Gas'],
-            'mileage_for_Oil': pricing_params[car_type]['mileage_for_Oil'],
-            'Gas_Price': pricing_params[car_type]['Gas_Price'],
-            'Oil_Price': pricing_params[car_type]['Oil_Price'],
-            'driver_stay_fee': pricing_params[car_type]['driver_stay_fee'],
             'toll_fee': toll_fee,
             'estimated_destination_distance': distance,
             'estimated_return_distance': distance,
@@ -136,17 +131,18 @@ def index():
             'Lower_PSRM_Peripheria': distance - 15,
             'dropoff_gas_oil_mapping': dropoff_fuel_type,
             'return_gas_oil_mapping': return_fuel_type,
-            'dropoff_surge': dropoff_surge,
-            'reducer_discount_districts': pricing_params[car_type]['reducer_discount_districts']
+            'dropoff_surge': dropoff_surge
         }
 
         # Calculate price
-        if trip_type == "One-way Trip":
-            price = calculate_price_OneWay(params)
-        else:
-            price = calculate_price_roundTrip(params)
+        prices = {}
+        for car_type in pricing_params:
+            if trip_type == "One-way Trip":
+                prices[car_type] = calculate_price_OneWay(params, car_type)
+            else:
+                prices[car_type] = calculate_price_roundTrip(params, car_type)
 
-        return render_template('index.html', price=price)
+        return render_template('index.html', prices=prices)
 
     return render_template('index.html')
 
