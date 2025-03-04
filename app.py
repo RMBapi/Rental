@@ -3,34 +3,57 @@ from flask import Flask, render_template, request
 app = Flask(__name__)
 
 # Pricing parameters for each car type
+# pricing_params = {
+#     "Car Plus": {"body_fare_base": 1500, "fare_per_kilo_oil": 12, "fare_per_kilo_Gas": 15,"mileage_for_Gas": 9, "mileage_for_Oil": 9, "Oil_Price": 130, "Gas_Price": 43, "driver_stay_fee": 500, "reducer_discount_districts":  0.80},
+#     "Car Prime": {"body_fare_base": 2000, "fare_per_kilo_oil": 12, "fare_per_kilo_Gas": 15, "mileage_for_Gas": 9, "mileage_for_Oil": 9, "Oil_Price": 130, "Gas_Price": 43, "driver_stay_fee": 600, "reducer_discount_districts": 0.80},
+#     "Car Max": {"body_fare_base": 2500, "fare_per_kilo_oil": 15, "fare_per_kilo_Gas": 15, "mileage_for_Gas": 7.5, "mileage_for_Oil": 7.5, "Oil_Price": 130, "Gas_Price": 43, "driver_stay_fee": 700, "reducer_discount_districts": 0.80}
+# }
+
 pricing_params = {
-    "Car Plus": {"body_fare_base": 1500, "fare_per_kilo": 12, "mileage_for_Gas": 9, "mileage_for_Oil": 9, "Oil_Price": 130, "Gas_Price": 43, "driver_stay_fee": 500, "reducer_discount_districts":  0.80},
-    "Car Prime": {"body_fare_base": 2000, "fare_per_kilo": 12, "mileage_for_Gas": 9, "mileage_for_Oil": 9, "Oil_Price": 130, "Gas_Price": 43, "driver_stay_fee": 600, "reducer_discount_districts": 0.80},
-    "Car Max": {"body_fare_base": 2500, "fare_per_kilo": 15, "mileage_for_Gas": 7.5, "mileage_for_Oil": 7.5, "Oil_Price": 130, "Gas_Price": 43, "driver_stay_fee": 700, "reducer_discount_districts": 0.80}
+    "Car Plus": {"body_fare_base": 2000, "fare_per_kilo_oil": 17, "fare_per_kilo_Gas": 12, "driver_stay_fee": 500, "reducer_discount_districts": 0.80},
+    "Car Prime":{"body_fare_base": 2500, "fare_per_kilo_oil": 19, "fare_per_kilo_Gas": 12, "driver_stay_fee": 600, "reducer_discount_districts": 0.80},
+    "Car Max":  {"body_fare_base": 3500, "fare_per_kilo_oil": 21, "fare_per_kilo_Gas": 15, "driver_stay_fee": 700, "reducer_discount_districts": 0.80}
 }
 
 # Helper function to calculate fuel cost
-def cost_Calculation(estimated_destination_distance, mileage_type, fuel_price):
-    mileage = estimated_destination_distance / mileage_type
-    cost = mileage * fuel_price
-    return cost
+# def cost_Calculation(estimated_destination_distance, mileage_type, fuel_price):
+#     mileage = estimated_destination_distance / mileage_type
+#     cost = mileage * fuel_price
+#     return cost
+
+
+def cost_Calculation(estimated_destination_distance, per_kilo,short_trip_fare,long_trip_fare):
+    if estimated_destination_distance <= 10:
+        cost = (estimated_destination_distance * per_kilo) + short_trip_fare*(10-estimated_destination_distance)
+    elif 11 <= estimated_destination_distance <= 25:
+        cost = estimated_destination_distance * per_kilo
+    else:
+        cost = (estimated_destination_distance * per_kilo) - long_trip_fare*(estimated_destination_distance-25)
+    return cost       
+
 
 # Helper function to calculate fuel cost based on fuel type
-def calculate_fuel_cost(distance, fuel_type, mileage_gas, mileage_oil, Gas_Price, Oil_Price):
+def calculate_travel_cost(distance, fuel_type, per_kilo_oil,per_kilo_gas):
     if fuel_type == 'Gas':
-        return cost_Calculation(distance, mileage_gas, Gas_Price)
+        short_trip_fare = per_kilo_gas + 2
+        long_trip_fare = per_kilo_gas - 8
+        return cost_Calculation(distance, per_kilo_gas,short_trip_fare,long_trip_fare)
     else:
-        return cost_Calculation(distance, mileage_oil, Oil_Price)
+        short_trip_fare = per_kilo_gas + 3
+        long_trip_fare = per_kilo_gas - 6
+        return cost_Calculation(distance, per_kilo_oil,short_trip_fare,long_trip_fare)
 
 # Calculate price for one-way trip
 def calculate_price_OneWay(params,car_type):
     car_params = pricing_params[car_type]
+    per_kilo_oil = car_params['fare_per_kilo_oil']
+    per_kilo_gas = car_params['fare_per_kilo_Gas']
     body_fare_base = car_params['body_fare_base']
     estimated_destination_distance = params['estimated_destination_distance']
-    mileage_oil = car_params['mileage_for_Oil']
-    mileage_gas = car_params['mileage_for_Gas']
-    Oil_Price = car_params['Oil_Price']
-    Gas_Price = car_params['Gas_Price']
+    # mileage_oil = car_params['mileage_for_Oil']
+    # mileage_gas = car_params['mileage_for_Gas']
+    # Oil_Price = car_params['Oil_Price']
+    # Gas_Price = car_params['Gas_Price']
     Lower_PSRM_Peripheria = params['Lower_PSRM_Peripheria']
     toll_fee = params['toll_fee']
     dropoff_fuel_type = params['dropoff_gas_oil_mapping']
@@ -41,8 +64,8 @@ def calculate_price_OneWay(params,car_type):
 
     
     # Calculate fuel cost for dropoff and return
-    cost = calculate_fuel_cost(estimated_destination_distance, dropoff_fuel_type, mileage_gas, mileage_oil, Gas_Price, Oil_Price)
-    return_cost = calculate_fuel_cost(Lower_PSRM_Peripheria, return_fuel_type, mileage_gas, mileage_oil, Gas_Price, Oil_Price)
+    cost = calculate_travel_cost(estimated_destination_distance, dropoff_fuel_type, per_kilo_oil,per_kilo_gas)
+    return_cost = calculate_travel_cost(Lower_PSRM_Peripheria, return_fuel_type, per_kilo_oil,per_kilo_gas)
 
     # Calculate total price
     total_toll_fee = toll_fee * 2
@@ -57,12 +80,14 @@ def calculate_price_OneWay(params,car_type):
 def calculate_price_roundTrip(params,car_type):
     car_params = pricing_params[car_type]
     body_fare_base = car_params['body_fare_base']
+    per_kilo_oil = car_params['fare_per_kilo_oil']
+    per_kilo_gas = car_params['fare_per_kilo_Gas']
     n_days = params['n_days']
     estimated_destination_distance = params['estimated_destination_distance']
-    mileage_oil = car_params['mileage_for_Oil']
-    mileage_gas = car_params['mileage_for_Gas']
-    Oil_Price = car_params['Oil_Price']
-    Gas_Price = car_params['Gas_Price']
+    # mileage_oil = car_params['mileage_for_Oil']
+    # mileage_gas = car_params['mileage_for_Gas']
+    # Oil_Price = car_params['Oil_Price']
+    # Gas_Price = car_params['Gas_Price']
     estimated_return_distance = params['estimated_return_distance']
     toll_fee = params['toll_fee']
     driver_stay_fee = car_params['driver_stay_fee']
@@ -70,8 +95,8 @@ def calculate_price_roundTrip(params,car_type):
     return_fuel_type = params['return_gas_oil_mapping']
 
     # Calculate fuel cost for dropoff and return
-    cost = calculate_fuel_cost(estimated_destination_distance, dropoff_fuel_type, mileage_gas, mileage_oil, Gas_Price, Oil_Price)
-    return_cost = calculate_fuel_cost(estimated_return_distance, return_fuel_type, mileage_gas, mileage_oil, Gas_Price, Oil_Price)
+    cost = calculate_travel_cost(estimated_destination_distance, dropoff_fuel_type, per_kilo_oil,per_kilo_gas)
+    return_cost = calculate_travel_cost(estimated_return_distance, return_fuel_type, per_kilo_oil,per_kilo_gas)
 
     # Calculate body fare based on number of days
     if n_days == 1:
@@ -108,13 +133,13 @@ def index():
 
 
         # print("Car Type:", car_type)
-        print("Trip Type:", trip_type)
-        print("Distance:", distance)
-        print("Dropoff Fuel Type:", dropoff_fuel_type)
-        print("Return Fuel Type:", return_fuel_type)
-        print("Toll Fee:", toll_fee)
-        print("Number of Days:", n_days)
-        print("Dropoff Surge:", dropoff_surge)
+        # print("Trip Type:", trip_type)
+        # print("Distance:", distance)
+        # print("Dropoff Fuel Type:", dropoff_fuel_type)
+        # print("Return Fuel Type:", return_fuel_type)
+        # print("Toll Fee:", toll_fee)
+        # print("Number of Days:", n_days)
+        # print("Dropoff Surge:", dropoff_surge)
 
         # Validate inputs
         if distance < 0:
